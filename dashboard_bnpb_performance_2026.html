@@ -287,6 +287,25 @@
   .disaster-stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
   @media (max-width: 1100px) { .disaster-stat-grid { grid-template-columns: repeat(3, 1fr); } }
   @media (max-width: 620px) { .disaster-stat-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ---------- Real-time weather ---------- */
+  .weather-meta-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
+  .weather-refresh-btn { background: var(--surface-2); border: 1px solid var(--border-hair); color: var(--text-secondary); border-radius: 8px; padding: 6px 13px; font-size: 11.5px; font-weight:600; cursor:pointer; }
+  .weather-refresh-btn:hover { background: var(--status-info-bg); color: var(--text-primary); }
+  .weather-refresh-btn:disabled { opacity: .55; cursor: default; }
+  .weather-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .weather-card { background: var(--surface-2); border: 1px solid var(--border-hair); border-radius: 12px; padding: 14px 16px; }
+  .weather-card .wc-city { font-size: 12.5px; font-weight: 700; color: var(--text-primary); }
+  .weather-card .wc-region { font-size: 10.5px; color: var(--text-muted); margin-bottom: 9px; }
+  .weather-card .wc-main { display:flex; align-items:center; gap:10px; margin-bottom:9px; }
+  .weather-card .wc-icon { font-size: 30px; line-height:1; }
+  .weather-card .wc-temp { font-size: 22px; font-weight:700; line-height:1.2; }
+  .weather-card .wc-cond { font-size: 11.5px; color: var(--text-secondary); }
+  .weather-card .wc-rows { font-size: 11.5px; color: var(--text-secondary); display:flex; flex-direction:column; gap:3px; }
+  .weather-card .wc-badge { display:inline-block; margin-top:9px; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; padding:4px 9px; border-radius:20px; }
+  .weather-card .wc-badge.risk-high { background: var(--status-critical-bg); color: var(--status-critical); }
+  .weather-card .wc-badge.risk-med { background: var(--status-warning-bg); color: var(--status-warning); }
+  .weather-card .wc-badge.risk-low { background: var(--status-good-bg); color: var(--status-good); }
   .empty-state-sm { padding: 16px; text-align:center; color: var(--text-muted); font-size: 12.5px; }
 </style>
 </head>
@@ -337,6 +356,21 @@
 </div>
 
 <div class="wrap">
+
+  <section class="block" id="weatherSection">
+    <div class="section-head">
+      <div class="section-title"><span class="bar"></span>Cuaca Real-time — Lokasi Prioritas Bencana</div>
+      <div class="section-sub">Data cuaca live dari Open-Meteo &mdash; independen dari dataset CC BNPB, tidak mengikuti filter Periode/Channel</div>
+    </div>
+    <div class="chart-card">
+      <div class="weather-meta-row">
+        <div id="weatherUpdatedAt" style="font-size:11.5px; color:var(--text-muted);">Memuat data cuaca&hellip;</div>
+        <button class="weather-refresh-btn" id="weatherRefreshBtn" type="button">&#8635; Perbarui Cuaca</button>
+      </div>
+      <div class="weather-grid" id="weatherGrid"></div>
+      <div class="section-sub" style="margin-top:12px;">Sumber: <a href="https://open-meteo.com" target="_blank" rel="noopener" style="color:var(--text-secondary);">Open-Meteo</a> (gratis, tanpa API key, berbasis model cuaca open-data). Badge &quot;Risiko Cuaca Kering&quot; adalah heuristik sederhana (kelembapan &amp; potensi hujan rendah + suhu tinggi) untuk konteks operasional &mdash; <b>bukan</b> prakiraan atau peringatan dini resmi BMKG. Membutuhkan koneksi internet aktif pada perangkat yang membuka dashboard ini; panel lain di dashboard tetap berfungsi penuh tanpa internet.</div>
+    </div>
+  </section>
 
   <section class="block" id="kpiSection">
     <div class="section-head">
@@ -486,6 +520,7 @@
     <div>• <b>CSAT</b> dan <b>QA Score</b> tidak ditampilkan pada KPI Cards — sumber data tidak memiliki hasil survei kepuasan pelanggan maupun skor evaluasi QA, sehingga kedua indikator ini dihapus dari dashboard alih-alih menampilkan estimasi tanpa acuan data.</div>
     <div>• "Tren vs Periode Sebelumnya" dihitung dinamis: dibandingkan dengan jendela tanggal sepanjang periode terpilih, tepat sebelum tanggal mulai terpilih (dalam channel yang sama). "Performa vs Bulan Sebelumnya" kini tersedia (perbandingan Agustus vs September) karena sumber data sudah mencakup dua bulan; "Performa vs Tahun Sebelumnya" tetap tidak tersedia karena sumber data hanya mencakup Agustus–September 2026.</div>
     <div>• Dashboard ini interaktif sepenuhnya di sisi klien — seluruh angka dihitung ulang otomatis saat filter Periode atau Channel diubah.</div>
+      <div>• <b>Cuaca Real-time</b> (panel paling atas) diambil langsung dari API publik <b>Open-Meteo</b> saat halaman dibuka / tombol "Perbarui Cuaca" diklik — independen dari dataset CC BNPB (Excel), tidak mengikuti filter Periode/Channel, dan membutuhkan koneksi internet aktif di perangkat yang membuka dashboard ini. Badge "Risiko Cuaca Kering" adalah heuristik indikatif (kelembapan, potensi hujan, suhu), bukan peringatan dini resmi BMKG.</div>
   </footer>
 
 </div>
@@ -1974,6 +2009,124 @@ document.getElementById('subtitleText').textContent = `BNPB · Queue ${DATA.meta
 document.getElementById('headerMeta').innerHTML = `Periode data: ${fmtDateLong(DATA.meta.period_start)} \u2013 ${fmtDateLong(DATA.meta.period_end)}<br>Data 17 September bersifat parsial (hari berjalan)`;
 
 render();
+
+// ---------------- Real-time Weather (Open-Meteo, independent of CC BNPB dataset) ----------------
+const WEATHER_CITIES = [
+  { name: 'Jakarta', region: 'Pusdalops BNPB (HQ)', lat: -6.2088, lon: 106.8456 },
+  { name: 'Pekanbaru', region: 'Riau — rawan karhutla', lat: 0.5333, lon: 101.45 },
+  { name: 'Palembang', region: 'Sumatera Selatan — rawan karhutla', lat: -2.9761, lon: 104.7754 },
+  { name: 'Pontianak', region: 'Kalimantan Barat — rawan karhutla', lat: -0.0263, lon: 109.3425 },
+  { name: 'Palangka Raya', region: 'Kalimantan Tengah — rawan karhutla', lat: -2.2096, lon: 113.9213 },
+];
+
+const WMO_WEATHER = {
+  0:{icon:'☀️',label:'Cerah'}, 1:{icon:'🌤️',label:'Cerah Berawan'}, 2:{icon:'⛅',label:'Berawan Sebagian'}, 3:{icon:'☁️',label:'Berawan'},
+  45:{icon:'🌫️',label:'Berkabut'}, 48:{icon:'🌫️',label:'Kabut Beku'},
+  51:{icon:'🌦️',label:'Gerimis Ringan'}, 53:{icon:'🌦️',label:'Gerimis'}, 55:{icon:'🌧️',label:'Gerimis Lebat'},
+  56:{icon:'🌧️',label:'Gerimis Beku Ringan'}, 57:{icon:'🌧️',label:'Gerimis Beku Lebat'},
+  61:{icon:'🌧️',label:'Hujan Ringan'}, 63:{icon:'🌧️',label:'Hujan Sedang'}, 65:{icon:'🌧️',label:'Hujan Lebat'},
+  66:{icon:'🌧️',label:'Hujan Beku Ringan'}, 67:{icon:'🌧️',label:'Hujan Beku Lebat'},
+  71:{icon:'🌨️',label:'Salju Ringan'}, 73:{icon:'🌨️',label:'Salju Sedang'}, 75:{icon:'❄️',label:'Salju Lebat'}, 77:{icon:'❄️',label:'Butiran Salju'},
+  80:{icon:'🌦️',label:'Hujan Lokal Ringan'}, 81:{icon:'🌧️',label:'Hujan Lokal Sedang'}, 82:{icon:'⛈️',label:'Hujan Lokal Lebat'},
+  85:{icon:'🌨️',label:'Salju Lokal Ringan'}, 86:{icon:'🌨️',label:'Salju Lokal Lebat'},
+  95:{icon:'⛈️',label:'Badai Petir'}, 96:{icon:'⛈️',label:'Badai Petir + Hujan Es Ringan'}, 99:{icon:'⛈️',label:'Badai Petir + Hujan Es Lebat'},
+};
+function weatherInfo(code){ return WMO_WEATHER[code] || {icon:'❓', label:'Tidak diketahui'}; }
+
+function fireRiskBadge(humidity, precipProb, tempMax){
+  if (humidity==null || precipProb==null || tempMax==null) return null;
+  if (humidity < 40 && precipProb < 20 && tempMax >= 30) return {level:'risk-high', label:'Risiko Cuaca Kering: Tinggi'};
+  if (humidity < 60 && precipProb < 40) return {level:'risk-med', label:'Risiko Cuaca Kering: Sedang'};
+  return {level:'risk-low', label:'Risiko Cuaca Kering: Rendah'};
+}
+
+async function fetchCityWeather(city){
+  const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + city.lat + '&longitude=' + city.lon +
+    '&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m' +
+    '&daily=precipitation_probability_max,temperature_2m_max,temperature_2m_min&timezone=Asia%2FJakarta&forecast_days=1';
+  const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const timeoutId = controller ? setTimeout(()=>controller.abort(), 10000) : null;
+  try {
+    const res = await fetch(url, controller ? { signal: controller.signal } : {});
+    if (timeoutId) clearTimeout(timeoutId);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    return { city: city, ok: true, data: data };
+  } catch (err) {
+    if (timeoutId) clearTimeout(timeoutId);
+    return { city: city, ok: false, error: err };
+  }
+}
+
+function renderWeatherCard(result){
+  const city = result.city;
+  if (!result.ok) {
+    return '<div class="weather-card"><div class="wc-city">' + city.name + '</div><div class="wc-region">' + city.region + '</div>' +
+      '<div style="color:var(--text-muted); font-size:12px; margin-top:10px;">⚠️ Gagal memuat data cuaca kota ini. Periksa koneksi internet.</div></div>';
+  }
+  const cur = result.data.current || {};
+  const daily = result.data.daily || {};
+  const wi = weatherInfo(cur.weather_code);
+  const precipProb = Array.isArray(daily.precipitation_probability_max) ? daily.precipitation_probability_max[0] : null;
+  const tempMax = Array.isArray(daily.temperature_2m_max) ? daily.temperature_2m_max[0] : null;
+  const tempMin = Array.isArray(daily.temperature_2m_min) ? daily.temperature_2m_min[0] : null;
+  const risk = fireRiskBadge(cur.relative_humidity_2m, precipProb, tempMax);
+  return `<div class="weather-card">
+    <div class="wc-city">${city.name}</div>
+    <div class="wc-region">${city.region}</div>
+    <div class="wc-main">
+      <div class="wc-icon">${wi.icon}</div>
+      <div>
+        <div class="wc-temp">${cur.temperature_2m!=null?Math.round(cur.temperature_2m):'—'}°C</div>
+        <div class="wc-cond">${wi.label}</div>
+      </div>
+    </div>
+    <div class="wc-rows">
+      <div>Terasa seperti: ${cur.apparent_temperature!=null?Math.round(cur.apparent_temperature):'—'}°C</div>
+      <div>Kelembapan: ${cur.relative_humidity_2m!=null?cur.relative_humidity_2m:'—'}%</div>
+      <div>Angin: ${cur.wind_speed_10m!=null?cur.wind_speed_10m:'—'} km/j</div>
+      <div>Potensi hujan hari ini: ${precipProb!=null?precipProb+'%':'—'}</div>
+      <div>Suhu min/maks: ${tempMin!=null?Math.round(tempMin):'—'}° / ${tempMax!=null?Math.round(tempMax):'—'}°C</div>
+    </div>
+    ${risk ? `<span class="wc-badge ${risk.level}">${risk.label}</span>` : ''}
+  </div>`;
+}
+
+let weatherLoading = false;
+async function loadWeather(){
+  if (weatherLoading) return;
+  if (typeof fetch !== 'function') {
+    const meta0 = document.getElementById('weatherUpdatedAt');
+    if (meta0) meta0.textContent = 'Browser ini tidak mendukung pengambilan data cuaca live.';
+    return;
+  }
+  weatherLoading = true;
+  const grid = document.getElementById('weatherGrid');
+  const meta = document.getElementById('weatherUpdatedAt');
+  const btn = document.getElementById('weatherRefreshBtn');
+  if (btn) btn.disabled = true;
+  if (meta) meta.textContent = 'Memuat data cuaca…';
+  try {
+    const results = await Promise.all(WEATHER_CITIES.map(fetchCityWeather));
+    if (grid) grid.innerHTML = results.map(renderWeatherCard).join('');
+    const anyOk = results.some(r=>r.ok);
+    const now = new Date();
+    let stamp;
+    try { stamp = now.toLocaleString('id-ID', { timeZone:'Asia/Jakarta', dateStyle:'medium', timeStyle:'short' }); }
+    catch (e) { stamp = now.toLocaleString(); }
+    if (meta) meta.textContent = anyOk ? ('Terakhir diperbarui: ' + stamp + ' WIB') : ('Tidak dapat memuat data cuaca (' + stamp + ' WIB) — periksa koneksi internet.');
+  } catch (err) {
+    if (meta) meta.textContent = 'Gagal memuat data cuaca. Periksa koneksi internet lalu klik Perbarui Cuaca.';
+  } finally {
+    weatherLoading = false;
+    if (btn) btn.disabled = false;
+  }
+}
+
+const weatherRefreshBtnEl = document.getElementById('weatherRefreshBtn');
+if (weatherRefreshBtnEl) weatherRefreshBtnEl.addEventListener('click', loadWeather);
+loadWeather();
+
 
 })();
 </script>
